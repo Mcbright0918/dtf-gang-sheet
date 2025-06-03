@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DTF Gang Sheet Designer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    h2 {
+      margin: 15px;
+      font-size: 20px;
+    }
+
+    .canvas-container-wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: auto;
+      padding: 5px;
+      background: #f0f0f0;
+    }
+
+    canvas {
+      border: 2px dashed #ccc;
+      background: #fff;
+    }
+
+    .controls {
+      padding: 10px;
+      background: #e0e0e0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+
+    label.upload-btn {
+      background: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin: 5px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      padding: 10px;
+      overflow-x: auto;
+      background: #fafafa;
+    }
+
+    .gallery img {
+      width: 60px;
+      height: 60px;
+      object-fit: contain;
+      border: 1px solid #ccc;
+      padding: 5px;
+      cursor: pointer;
+    }
+
+    button {
+      padding: 10px 15px;
+      border: none;
+      background: #2196F3;
+      color: white;
+      border-radius: 5px;
+      margin: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>DTF Gang Sheet Designer (72 PPI Display → 300 PPI Download)</h2>
+
+  <div class="canvas-container-wrapper">
+    <canvas id="canvas" width="1584" height="2808"></canvas>
+  </div>
+
+  <div class="controls">
+    <label class="upload-btn" for="upload">Upload Design</label>
+    <input type="file" id="upload" accept="image/*" multiple />
+    <button onclick="removeSelected()">Delete Selected</button>
+    <button onclick="clearCanvas()">Clear All</button>
+    <button onclick="download()">Download 300 PPI PNG</button>
+  </div>
+
+  <div class="gallery" id="gallery"></div>
+
+  <script>
+    const canvasEl = document.getElementById('canvas');
+    const canvas = new fabric.Canvas(canvasEl, {
+      preserveObjectStacking: true,
+      selection: true
+    });
+
+    const gallery = document.getElementById('gallery');
+    const uploadInput = document.getElementById('upload');
+    const canvasObjects = [];
+
+    function fitCanvasToScreen() {
+      const wrapper = document.querySelector('.canvas-container-wrapper');
+      const maxWidth = wrapper.clientWidth;
+      const maxHeight = wrapper.clientHeight;
+
+      const aspect = canvasEl.width / canvasEl.height;
+      let newWidth = maxWidth;
+      let newHeight = maxWidth / aspect;
+
+      if (newHeight > maxHeight) {
+        newHeight = maxHeight;
+        newWidth = newHeight * aspect;
+      }
+
+      canvas.setWidth(newWidth);
+      canvas.setHeight(newHeight);
+      canvas.setZoom(newWidth / 1584); // 1584 is original canvas width (72ppi)
+      canvas.renderAll();
+    }
+
+    window.addEventListener('resize', fitCanvasToScreen);
+    window.addEventListener('load', fitCanvasToScreen);
+
+    uploadInput.addEventListener('change', function (e) {
+      const files = e.target.files;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const reader = new FileReader();
+        reader.onload = function (f) {
+          const dataURL = f.target.result;
+
+          const thumb = document.createElement('img');
+          thumb.src = dataURL;
+          thumb.onclick = () => {
+            const obj = canvasObjects.find(o => o.dataURL === dataURL);
+            if (obj) {
+              canvas.setActiveObject(obj.fabricImage);
+              canvas.renderAll();
+            }
+          };
+          gallery.appendChild(thumb);
+
+          fabric.Image.fromURL(dataURL, function (img) {
+            img.set({
+              left: 200,
+              top: 200,
+              scaleX: 0.25,
+              scaleY: 0.25,
+              hasRotatingPoint: true,
+              cornerColor: 'blue',
+              cornerSize: 10,
+              transparentCorners: false
+            });
+            canvas.add(img);
+            canvas.setActiveObject(img);
+            canvasObjects.push({ fabricImage: img, dataURL });
+
+            fitCanvasToScreen(); // ensure visibility
+          }, { crossOrigin: 'Anonymous' });
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function removeSelected() {
+      const active = canvas.getActiveObject();
+      if (active) canvas.remove(active);
+    }
+
+    function clearCanvas() {
+      canvas.clear();
+      gallery.innerHTML = '';
+      canvasObjects.length = 0;
+    }
+
+    function download() {
+      const exportCanvas = new fabric.StaticCanvas(null, {
+        width: 6600,
+        height: 11700,
+        backgroundColor: canvas.backgroundColor
+      });
+
+      canvas.getObjects().forEach(obj => {
+        const clone = fabric.util.object.clone(obj);
+        clone.scaleX *= 4.1667;
+        clone.scaleY *= 4.1667;
+        clone.left *= 4.1667;
+        clone.top *= 4.1667;
+        exportCanvas.add(clone);
+      });
+
+      exportCanvas.renderAll();
+
+      const dataURL = exportCanvas.toDataURL({
+        format: 'png',
+        quality: 1
+      });
+
+      const link = document.createElement('a');
+      link.href = dataURL;
+      link.download = 'dtf-gang-sheet-22x39-300ppi.png';
+      link.click();
+    }
+  </script>
+
+</body>
+</html>
