@@ -1,0 +1,98 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", sans-serif;
+  height: 100%;
+  overflow: hidden;
+  background: #f8f9fa;
+}
+header {
+  background: #343a40;
+  color: white;
+  padding: 10px 20px;
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.controls {
+  padding: 10px;
+  background: #fff;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+}
+.controls input,
+.controls button,
+.controls select {
+  padding: 6px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+#wrapper {
+  display: flex;
+  height: calc(100vh - 90px);
+  position: relative;
+  overflow: auto;
+}
+.canvas-container {
+  position: relative;
+  flex-grow: 1;
+  overflow: auto;
+}
+canvas {
+  background: #fff;
+  border: 1px solid #ccc;
+  touch-action: none;
+  display: block;
+  margin: 40px;
+}
+.ruler {
+  position: absolute;
+  background: #eee;
+  font-size: 10px;
+  color: #444;
+  font-family: monospace;
+  z-index: 10;
+}
+#ruler-top {
+  left: 40px;
+  top: 0;
+  height: 40px;
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid #aaa;
+}
+#ruler-left {
+  top: 40px;
+  left: 0;
+  width: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  border-right: 1px solid #aaa;
+}
+
+.grid-lines {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  pointer-events: none;
+  z-index: 1;
+}
+.templates-panel {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+}
+.templates-panel img {
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
